@@ -1,0 +1,18 @@
+{
+    "agentNumber": 4,
+
+    "moveSpeed": 0.25,
+    "turnSpeed": 0.5,
+    "sensorAngle": 0.5,
+    "sensorDistance": 2.5,
+
+    "mapWidth": 192,
+    "mapHeight": 108,
+
+    "decayRate": 0.005,
+    "diffuseRate": 0.0,
+
+    "spawnMethod": "centre",
+
+    "simulationLevel": "stage0"
+}
