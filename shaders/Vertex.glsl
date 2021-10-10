@@ -6,7 +6,6 @@ layout (location = 2) in vec2 aTexCoord;
 
 void main()
 {
+	// get vertex positions based on texture
 	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-	//vertColor = aColor;
-	//texCoord = aTexCoord;
 }

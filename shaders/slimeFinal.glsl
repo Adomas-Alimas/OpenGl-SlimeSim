@@ -1,11 +1,13 @@
 #version 450 core
 #define PI 3.1415926535
+// local workgroup size
 layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
 layout (location = 0) uniform float time;
 
 layout (binding = 3, rgba32f) uniform image2D trailMap;
 
+// setting SSBO
 struct settingsStruct {
 	float moveSpeed;
 	float turnSpeed;
@@ -18,18 +20,17 @@ struct settingsStruct {
 	float decayRate;
 	float diffuseRate;
 };
-
 layout (std430, binding = 4) buffer settingsBuffer
 {
 	settingsStruct settings;
 };
 
+// agents SSBO
 struct agent {
 	float x;
 	float y;
 	float angle;
 };
-
 layout (std430, binding = 5) buffer agentBuffer
 {
 	agent agentArray[];
@@ -70,6 +71,7 @@ float senseTrail(agent cAgent, float sensorAngleOffset, float sensorDistance)
 			int sampleY = min(settings.height-1, max(0, sensorCenterY+offsetY));
 
 			senseSum += dot(imageLoad(trailMap, ivec2(sampleX, sampleY)), vec4(1,1,1,1));
+			//senseSum += imageLoad(trailMap, ivec2(sampleX, sampleY)).b;
 		}
 	}
 
@@ -79,6 +81,8 @@ float senseTrail(agent cAgent, float sensorAngleOffset, float sensorDistance)
 
 void main()
 {
+	// get settings from settings SSBO
+
 	int width = settings.width;
 	int height = settings.height;
 
@@ -92,7 +96,7 @@ void main()
 
 	ivec2 id = ivec2(gl_GlobalInvocationID.xy);
 	
-	
+	// skip if compute shader invocation is too big
 	if (id.x > agentArray.length())
 	{
 		return;
@@ -109,7 +113,7 @@ void main()
 	float randomSteerStrength = uintToRange01(hash(random));
 
 
-
+	// choose direction based on trails
 	if(senseForward > senseLeft && senseForward > senseRight)
 	{
 		currentAgent.angle += 0;

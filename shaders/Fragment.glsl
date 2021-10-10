@@ -54,6 +54,7 @@ void main()
 
 	blurSum /= totalWeight;
 
+	// calculate diffusion + decay
 	float diffuseWeight = clamp(diffuseRate, 0, 1);
 
 	vec4 blurredColor = originalColor * (1 - diffuseWeight) + blurSum * diffuseWeight;
