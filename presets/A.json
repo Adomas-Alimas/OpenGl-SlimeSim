@@ -14,5 +14,5 @@
 
     "spawnMethod": "circle",
 
-    "simulationLevel": "stageFinal"
+    "simulationShader": "stageFinal"
 }

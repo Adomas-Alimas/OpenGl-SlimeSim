@@ -14,5 +14,5 @@
 
     "spawnMethod": "centre",
 
-    "simulationLevel": "stage0"
+    "simulationShader": "stage0"
 }
