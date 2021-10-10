@@ -23,23 +23,26 @@ void processInput(GLFWwindow *window);
 
 int main()
 {
-	// read preset selection into json object
+	// get and read preset file into json object
 	// --------------------------------------
 	std::string settingsOption;
-
-	std::cout << "Choose settings preset(A, B or C): " << std::endl;
+	std::cout << "Choose settings preset (found in presets folder): " << std::endl;
 	std::cin >> settingsOption;
-	/*
-	if(settingsOption.compare("A") != 0 && settingsOption.compare("B") != 0 && settingsOption.compare("C") != 0)
+	
+	std::string command = "presets/" + settingsOption + ".json";
+
+	std::ifstream input(command);
+
+	if (!input)
 	{
-		std::cout << "Such preset doesn't exist." << std::endl;
-		Sleep(100);
+		std::cout << "This preset file doesn't exist.";
 		return -1;
 	}
-	*/
-	std::string command = "settings/" + settingsOption + ".json";
-	std::ifstream input(command);
+
 	json settingsData;
+
+	
+
 	input >> settingsData;
 
 	// glfw setup
@@ -57,13 +60,18 @@ int main()
 		return -1;
 	}
 
+	// setting OpenGL version, profiles, other settings
+	// ------------------------------------------------
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);  
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+	// remove after done
+	//glfwWindowHint(GLFW_DECORATED, false);
 
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Slime sim", NULL, NULL);
+	//GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Slime sim", glfwGetPrimaryMonitor(), NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -88,18 +96,18 @@ int main()
 	computeShader simShader("shaders/slimeFinal.glsl");
 
 	// choose simulation level based on settings preset
-	if(settingsData["simulationLevel"] == "stageFinal")
+	if(settingsData["simulationShader"] == "stageFinal")
 	{
 		simShader = computeShader("shaders/slimeFinal.glsl");
 	}
-	else if(settingsData["simulationLevel"] == "stage0")
+	else
 	{
-		simShader = computeShader("shaders/slime0.glsl");
+		std::string option = settingsData["simulationShader"];
+		std::string shaderpath = "shaders/" + option + ".glsl";
+		simShader = computeShader(shaderpath.c_str());
 	}
 	
-	
 
-	
 	// set up vertex data and buffers
 	// ------------------------------
 	float rectangleVertices[] = {
@@ -204,7 +212,7 @@ int main()
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, settingsSSBO);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(generalSettings), &generalSettings, GL_STATIC_DRAW);
 
-
+	
 	// create agent struct and fill an array with agents
 	// -------------------------------------------------
 	unsigned int AGENT_NUM = settingsData["agentNumber"];
@@ -223,7 +231,7 @@ int main()
 	agent *agentsArrPtr;
 	agentsArrPtr = (agent*) malloc(AGENT_NUM * sizeof(agent));
 
-	// setup random device for angle, position, etc.. customisation
+	// setup random device for angle, position, etc.. customization
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	
@@ -249,7 +257,7 @@ int main()
 		}
 		else if (settingsData["spawnMethod"] == "circle")
 		{
-			// spanws all agents in the area of a circle with angles
+			// spawns all agents in the area of a circle with angles
 			// facing towards screen centre
 			int radius = SCREEN_HEIGHT / 3;
 			std::uniform_real_distribution<> randomAngle(0, 6.2831);
@@ -281,6 +289,7 @@ int main()
 	}
 
 	// create and fill SSBO with agent array created above
+	// ---------------------------------------------------
 	unsigned int agentDataSSBO;
 	glGenBuffers(1, &agentDataSSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, agentDataSSBO);
@@ -326,36 +335,45 @@ int main()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		
 
 		// run general vertex and fragment shaders
 		// ---------------------------------------
 		generalShader.use();
 		glBindVertexArray(VAO);
 
+		// bind mainTexture texture to binding = 3 in frag shader
+		// ensure the correct texture slot is used
 		glBindImageTexture(3, mainTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-		// bind SSBO's to bindings
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, settingsSSBO);
-		
 		glBindTexture(GL_TEXTURE_2D, mainTexture);
 		glActiveTexture(GL_TEXTURE2);
+
+		// bind settings SSBO to binding = 4 in frag shader
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, settingsSSBO);
+		
+		// draw the mainTexture on a whole screen rectangle 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		// calculate new simualtion step in compute shader
+		// calculate new simulation step in compute shader
 		// ---------------------------------
 		simShader.use();
+
 		float timeValue = glfwGetTime();
-		//glUniform1f(0, timeValue);
 		simShader.setFloat("time", timeValue);
 
 		// bind texture to binding = 3 in compute shader
 		glBindImageTexture(3, mainTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
-		// bind SSBO's to bindings
+		// bind settings SSBO to binding = 4 in compute shader
+		// bind agent array SSBO to binding = 5 in compute shader
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, settingsSSBO);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, agentDataSSBO);
 
-		simShader.dispatch(AGENT_NUM/1, 1);
+		// change this value to make compute shader more efficient (1, 8, 16, 32)
+		const int computeDivisor = 32;
+
+		simShader.dispatch(AGENT_NUM/computeDivisor, 1);
+
+		// stops execution until all compute shaders have finished work
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 		// glfw - swap buffers and poll events
