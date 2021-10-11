@@ -1,5 +1,5 @@
 #include <glad/glad.h> 
-#include <GLFW\glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include <Windows.h>
 #define _USE_MATH_DEFINES // to get M_PI
@@ -12,6 +12,7 @@
 
 #include "json.hpp"
 using json = nlohmann::json;
+
 
 #include "shader.h"
 
@@ -132,7 +133,6 @@ int main()
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
 
-
 	// bind vertex array object first, then bind and set vertex buffer, then configure vertex attributes
 	glBindVertexArray(VAO);
 
@@ -152,16 +152,18 @@ int main()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),  (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	//texture coord attrib
+	// texture coord attrib
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),  (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	// generate empty texture and all params for it
-	// --------------------------------------------
-	unsigned int mainTexture;
-	glGenTextures(1, &mainTexture);
+	// generate empty trail and agents textures and all params for it
+	// --------------------------------------------------------------
+	unsigned int trailTexture, agentTexture;
+	glGenTextures(1, &trailTexture);
+	glGenTextures(1, &agentTexture);
 
-	glBindTexture(GL_TEXTURE_2D, mainTexture);
+	// trail texture setup
+	glBindTexture(GL_TEXTURE_2D, trailTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -169,12 +171,25 @@ int main()
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-	// setting up agent settings for compoute shaders
+	// agent texture setup
+	glBindTexture(GL_TEXTURE_2D, agentTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	float alphaVal[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+	glClearTexImage(agentTexture, 0, GL_RGBA, GL_FLOAT, alphaVal);
+
+	// setting up agent settings for compute shaders
 	// ----------------------------------------------
 
 	// create and populate settings struct
 	struct settings{
-		// agent seetings
+		// agent settings
 		// --------------
 		float moveSpeed;
 		float turnSpeed;
@@ -341,14 +356,12 @@ int main()
 		generalShader.use();
 		glBindVertexArray(VAO);
 
-		// bind mainTexture texture to binding = 3 in frag shader
-		// ensure the correct texture slot is used
-		glBindImageTexture(3, mainTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-		glBindTexture(GL_TEXTURE_2D, mainTexture);
-		glActiveTexture(GL_TEXTURE2);
+		// bind textures texture to bindings in frag shader
+		glBindImageTexture(1, trailTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+		glBindImageTexture(2, agentTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
-		// bind settings SSBO to binding = 4 in frag shader
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, settingsSSBO);
+		// bind settings SSBO to binding = 3 in frag shader
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, settingsSSBO);
 		
 		// draw the mainTexture on a whole screen rectangle 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -360,13 +373,14 @@ int main()
 		float timeValue = glfwGetTime();
 		simShader.setFloat("time", timeValue);
 
-		// bind texture to binding = 3 in compute shader
-		glBindImageTexture(3, mainTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+		// bind textures to bindings in compute shader
+		glBindImageTexture(1, trailTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+		glBindImageTexture(2, agentTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
-		// bind settings SSBO to binding = 4 in compute shader
-		// bind agent array SSBO to binding = 5 in compute shader
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, settingsSSBO);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, agentDataSSBO);
+		// bind settings SSBO to binding = 3 in compute shader
+		// bind agent array SSBO to binding = 4 in compute shader
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, settingsSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, agentDataSSBO);
 
 		// change this value to make compute shader more efficient (1, 8, 16, 32)
 		const int computeDivisor = 32;

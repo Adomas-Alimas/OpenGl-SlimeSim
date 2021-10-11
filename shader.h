@@ -127,7 +127,7 @@ class computeShader
 	//shader class that builds a program out of compute shader code
 	//-------------------------------------------------------------------
 public:
-		// Program ID
+	// Program ID
 	unsigned int ID;
 
 	// contructor for reading and building shader

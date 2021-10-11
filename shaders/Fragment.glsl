@@ -1,8 +1,8 @@
 #version 450 core
 out vec4 FragColor;
 
-layout (binding = 2) uniform sampler2D trailMap;
-layout (binding = 3, rgba32f) uniform image2D inputTexture;
+layout (binding = 1, rgba32f) uniform image2D trailMap;
+layout (binding = 2, rgba32f) uniform image2D agentMap;
 
 struct settingsStruct {
 	float moveSpeed;
@@ -17,7 +17,7 @@ struct settingsStruct {
 	float diffuseRate;
 };
 
-layout (std430, binding = 4) buffer settingsBuffer
+layout (std430, binding = 3) buffer settingsBuffer
 {
 	settingsStruct settings;
 };
@@ -31,10 +31,10 @@ void main()
 	float diffuseRate = settings.diffuseRate;
 	// -------------------------------------
 
-	ivec2 id = ivec2(gl_FragCoord.xy);
 
 	// get original color for each fragment
-	vec4 originalColor = texelFetch(trailMap, ivec2(gl_FragCoord.xy), 0).rgba;
+	vec4 originalColor = imageLoad(trailMap, ivec2(gl_FragCoord.xy)).rgba;
+	
 
 	// simple box blur
 	vec4 blurSum;
@@ -43,11 +43,12 @@ void main()
 	{
 		for(int offsetY = -1; offsetY <= 1; offsetY++)
 		{
-			//blurSum += imageLoad(inputTexture, ivec2(tempX, tempY)).rgb;
-			int sampleX = min(width-1, max(0, id.x+offsetX));
-			int sampleY = min(height-1, max(0, id.y+offsetY));
+			
+			int sampleX = min(width-1, max(0, int(gl_FragCoord.x)+offsetX));
+			int sampleY = min(height-1, max(0, int(gl_FragCoord.y)+offsetY));
 
-			blurSum = blurSum + texelFetch(trailMap, ivec2(sampleX, sampleY), 0).rgba;
+			// using imageLoad
+			blurSum += imageLoad(trailMap, ivec2(sampleX, sampleY)).rgba;
 			totalWeight+= 1;
 		}
 	}
@@ -59,8 +60,22 @@ void main()
 
 	vec4 blurredColor = originalColor * (1 - diffuseWeight) + blurSum * diffuseWeight;
 	
-
-	imageStore(inputTexture, id, max(blurredColor - decayRate, 0.0f));  
+	imageStore(trailMap, ivec2(gl_FragCoord.xy), max(blurredColor - decayRate, 0.0f));  
 	
-	FragColor = originalColor;
+	// load agent color from agentMap
+	vec4 agentColor = imageLoad(agentMap, ivec2(gl_FragCoord.xy)).rgba;
+
+	if (agentColor.a > 0.1)
+	{
+		FragColor = agentColor;
+	}
+	else
+	{
+		FragColor = originalColor;
+	}
+
+	imageStore(trailMap, ivec2(0, 0), vec4(0, 0, 0, 0));
+
+	imageStore(agentMap, ivec2(gl_FragCoord.xy), vec4(0, 0, 0, 0));
+
 }

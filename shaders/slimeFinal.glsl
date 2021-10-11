@@ -5,7 +5,8 @@ layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
 layout (location = 0) uniform float time;
 
-layout (binding = 3, rgba32f) uniform image2D trailMap;
+layout (binding = 1, rgba32f) uniform image2D trailMap;
+layout (binding = 2, rgba32f) uniform image2D agentMap;
 
 // setting SSBO
 struct settingsStruct {
@@ -20,7 +21,7 @@ struct settingsStruct {
 	float decayRate;
 	float diffuseRate;
 };
-layout (std430, binding = 4) buffer settingsBuffer
+layout (std430, binding = 3) buffer settingsBuffer
 {
 	settingsStruct settings;
 };
@@ -31,7 +32,7 @@ struct agent {
 	float y;
 	float angle;
 };
-layout (std430, binding = 5) buffer agentBuffer
+layout (std430, binding = 4) buffer agentBuffer
 {
 	agent agentArray[];
 };
@@ -146,8 +147,13 @@ void main()
 	}
 
 	agentArray[id.x] = currentAgent;
-	//imageStore(trailMap, ivec2(currentAgent.x, currentAgent.y), color);
-	imageStore(trailMap, ivec2(currentAgent.x, currentAgent.y), vec4(1.0, 1.0, 1.0, 1.0));
+	
+	imageStore(agentMap, ivec2(currentAgent.x, currentAgent.y), vec4(1, 1, 1, 1));
+
+	float trailStrenght = 1;
+	//vec4 previousTrail = imageLoad(trailMap, ivec2(currentAgent.x, currentAgent.y));
+	vec4 newTrail = vec4(trailStrenght, trailStrenght, trailStrenght, 1);
+	imageStore(trailMap, ivec2(currentAgent.x, currentAgent.y), newTrail);
 
 }
 
