@@ -20,8 +20,8 @@ Also Sage Jenson's variation of this project and it's helpful write up, which ca
 If you don't want to compile this project yourself pre-compiled binaries can be found in releases.
 
 **Requirements:**
-- [lib](lib) folder with all of it's contents in compile dir.
-- [glfw3.dll](glfw3.dll), [json.hpp](json.hpp), [main.cpp](main.cpp) and [shader.h](shader.h) file in compile dir.
+- [lib](lib) folder with all of it's contents in compile directory.
+- [glfw3.dll](glfw3.dll), [json.hpp](json.hpp), [main.cpp](main.cpp) and [shader.h](shader.h) file in compile directory.
 - Preferred compiler.
 
 I have tested out compiling this project using g++ in a Windows 10 environment, if you are on a similar environment you can use a simple one-liner:
