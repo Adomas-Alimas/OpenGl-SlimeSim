@@ -2,7 +2,7 @@
 A [physarum slime mold](https://en.wikipedia.org/wiki/Physarum_polycephalum) simulation that makes use of modern OpenGL compute shaders and other features.
 
 ## Inspirations
-Originally inspired by [SebLague](https://github.com/SebLague) video of his project [Slime-Simulation](https://github.com/SebLague/Slime-Simulation), this is a very similar project, but made in C++.
+Originally inspired by a video of [SebLague's](https://github.com/SebLague) project [Slime-Simulation](https://github.com/SebLague/Slime-Simulation), this is a very similar project, but made in C++ and OpenGl instead of C# and DirectX.
 
 Additional credit goes to Jeff Jones, who, I believe, inspired most of these projects with his article (available [here](https://uwe-repository.worktribe.com/output/980579)) on pattern formation and evolution in physarum simulations.
 
