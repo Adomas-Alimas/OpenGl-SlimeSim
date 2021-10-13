@@ -39,7 +39,7 @@ layout (std430, binding = 4) buffer agentBuffer
 
 uint hash(uint state)
 {
-	// returns a very diferent result for all of the
+	// returns pseudo-random result
 	state ^= 2747636419u;
 	state *= 2654435769u;
 	state ^= state >> 16;
@@ -104,6 +104,7 @@ void main()
 	}
 
 	agent currentAgent = agentArray[id.x];
+	
 	// get a random number from a set of inputs
 	uint random = hash(int(currentAgent.y * width + currentAgent.x) + hash(int(id.x + time * 100000)));
 
@@ -112,7 +113,6 @@ void main()
 	float senseRight = senseTrail(currentAgent, -agentSensorAngleOffset, sensorDistance);
  
 	float randomSteerStrength = uintToRange01(hash(random));
-
 
 	// choose direction based on trails
 	if(senseForward > senseLeft && senseForward > senseRight)
@@ -132,10 +132,11 @@ void main()
 		currentAgent.angle -= (randomSteerStrength * turnSpeed);
 	}
 	
-
+	// calculate next position
 	currentAgent.x += moveSpeed * cos(currentAgent.angle);
 	currentAgent.y += moveSpeed * sin(currentAgent.angle);
 	
+	// bound checking
 	if (currentAgent.x <= 0 || currentAgent.x >= width || currentAgent.y <= 0 || currentAgent.y >= height)
 	{
 		uint random = hash(random);
@@ -146,14 +147,22 @@ void main()
 		currentAgent.angle = randomAngle;
 	}
 
+	// store calculated agent int oagent array
 	agentArray[id.x] = currentAgent;
 	
-	imageStore(agentMap, ivec2(currentAgent.x, currentAgent.y), vec4(1, 1, 1, 1));
+	// agent color theme
+	vec4 CONST_COLOR = vec4(1, 1, 1, 1);//(0.662, 0.282, 0.878, 1)
 
-	float trailStrenght = 1;
-	//vec4 previousTrail = imageLoad(trailMap, ivec2(currentAgent.x, currentAgent.y));
-	vec4 newTrail = vec4(trailStrenght, trailStrenght, trailStrenght, 1);
+	// store aent color in agentMap
+	imageStore(agentMap, ivec2(currentAgent.x, currentAgent.y), CONST_COLOR);
+	
+	// calculate and deposit trail into trailmap
+	vec4 deposit = vec4(CONST_COLOR/5);
+	deposit.a = 1;
+
+	vec4 previousTrail = imageLoad(trailMap, ivec2(currentAgent.x, currentAgent.y));
+
+	vec4 newTrail = vec4(min(previousTrail + deposit, CONST_COLOR));
+
 	imageStore(trailMap, ivec2(currentAgent.x, currentAgent.y), newTrail);
-
 }
-

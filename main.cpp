@@ -235,7 +235,7 @@ int main()
 	struct agent {
 		float x;
 		float y;
-		float angle;
+		float angle; // radians
 	};
 	
 	
@@ -327,6 +327,7 @@ int main()
 	
 	int flag = 0;
 	// main loop
+
 	while(!glfwWindowShouldClose(window))
 	{
 		// TODO: remove for debbuging

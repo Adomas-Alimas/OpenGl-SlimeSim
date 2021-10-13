@@ -1,16 +1,16 @@
 {
-    "agentNumber": 3200000,
+    "agentNumber": 1500000,
 
-    "moveSpeed": 1,
+    "moveSpeed": 0.5,
     "turnSpeed": 0.5,
     "sensorAngle": 0.5,
-    "sensorDistance": 2.5,
+    "sensorDistance": 5,
 
     "mapWidth": 1920,
     "mapHeight": 1080,
 
     "decayRate": 0.005,
-    "diffuseRate": 0.3,
+    "diffuseRate": 2,
 
     "spawnMethod": "centre",
 

@@ -32,7 +32,7 @@ void main()
 	// -------------------------------------
 
 
-	// get original color for each fragment
+	// get original color for each pixel(fragment)
 	vec4 originalColor = imageLoad(trailMap, ivec2(gl_FragCoord.xy)).rgba;
 	
 
@@ -60,23 +60,26 @@ void main()
 
 	vec4 blurredColor = originalColor * (1 - diffuseWeight) + blurSum * diffuseWeight;
 	
+	// store blurred + decayed trail in trailMap
 	imageStore(trailMap, ivec2(gl_FragCoord.xy), max(blurredColor - decayRate, 0.0f));  
 	
 	// load agent color from agentMap
 	vec4 agentColor = imageLoad(agentMap, ivec2(gl_FragCoord.xy)).rgba;
 
+	// if agent exists on this pixel show agent not trail
 	if (agentColor.a > 0.1)
 	{
 		FragColor = agentColor;
 	}
 	else
-	{
+	{	
+		// else show trail not agent
 		FragColor = originalColor;
 	}
 
-	imageStore(trailMap, ivec2(0, 0), vec4(0, 0, 0, 0));
+	// fixes left bottom corner white pixel bug?
+	//imageStore(trailMap, ivec2(0, 0), vec4(0, 0, 0, 0));
 
+	// clear the agent map, it will be filled by compute shader next 
 	imageStore(agentMap, ivec2(gl_FragCoord.xy), vec4(0, 0, 0, 0));
-
-	// branch test
 }
