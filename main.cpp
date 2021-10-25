@@ -209,7 +209,7 @@ int main()
 	} generalSettings;
 
 	// can't assign values to variables above from the json
-	// file so i have to do that bellow
+	// file so i have to do the assigning bellow
 	generalSettings.moveSpeed = settingsData["moveSpeed"];
 	generalSettings.turnSpeed = settingsData["turnSpeed"];
 	generalSettings.sensorAngle = settingsData["sensorAngle"];

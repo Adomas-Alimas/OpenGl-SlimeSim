@@ -59,9 +59,11 @@ void main()
 	float diffuseWeight = clamp(diffuseRate, 0, 1);
 
 	vec4 blurredColor = originalColor * (1 - diffuseWeight) + blurSum * diffuseWeight;
-	
+	blurredColor = blurredColor - decayRate;
+	blurredColor.a = 1;
+
 	// store blurred + decayed trail in trailMap
-	imageStore(trailMap, ivec2(gl_FragCoord.xy), max(blurredColor - decayRate, 0.0f));  
+	imageStore(trailMap, ivec2(gl_FragCoord.xy), max(blurredColor, 0.0f));  
 	
 	// load agent color from agentMap
 	vec4 agentColor = imageLoad(agentMap, ivec2(gl_FragCoord.xy)).rgba;
