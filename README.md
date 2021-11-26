@@ -1,7 +1,9 @@
 # OpenGl Slime Simulation
+
 A [physarum slime mold](https://en.wikipedia.org/wiki/Physarum_polycephalum) simulation written in C++, that makes use of modern (core 4.5+) OpenGL features.
 
 ## Inspirations
+
 Originally inspired by a video of [SebLague's](https://github.com/SebLague) project [Slime-Simulation](https://github.com/SebLague/Slime-Simulation), this is a very similar project, that substitutes of C# and DirectX for C++ and OpenGl.
 
 Additional credit goes to Jeff Jones, who, I believe, inspired most of these projects with his article (available [here](https://uwe-repository.worktribe.com/output/980579)) on pattern formation and evolution in physarum simulations.
@@ -9,6 +11,7 @@ Additional credit goes to Jeff Jones, who, I believe, inspired most of these pro
 Also Sage Jenson's variation of this project and it's helpful write up, which can be found [here](https://sagejenson.com/physarum).
 
 ## Project file breakdown
+
 - [lib](lib) - contains all of the dependencies for glfw and glad.
 - [presets](presets) - contains different value presets for different program output.
 - [shaders](shaders) - contains GLSL code shaders that are used at run-time.
@@ -17,14 +20,17 @@ Also Sage Jenson's variation of this project and it's helpful write up, which ca
 - [main.cpp](main.cpp) - main code file.
 
 ## Compiling this project
+
 If you don't want to compile this project yourself pre-compiled binaries can be found in the releases page.
 
 **Requirements:**
+
 - [lib](lib) folder with all of it's contents in compile directory.
 - [glfw3.dll](glfw3.dll), [json.hpp](json.hpp), [main.cpp](main.cpp) and [shader.h](shader.h) file in compile directory.
 - Preferred compiler.
 
 I have tested out compiling this project using g++ in a Windows 10 environment, if you are on a similar environment you can use a simple one-liner:
+
 ```
 g++ main.cpp lib/glad/src/glad.c lib/glfw-WIN32/lib-mingw-w64/libglfw3dll.a -Ilib/glfw-WIN32/include -Ilib/glad/include -o main.exe
 ```
@@ -35,23 +41,26 @@ If you are not using g++ you will have to compile the code according to your com
 
 If you have successfully compiled this project or have downloaded the .exe file you can try running it.
 
+**Technical requirements:**
+
+- A somewhat recent GPU that can support OpenGL 4.5 core version or later.
+- Depending on simulation size, enough ram so that the particles can be loaded.
+
 **Requirements:**
-- main.exe or differently named main executable file.
+
+- [main.exe](main.exe) or differently named main executable file.
 - [presets](presets) folder with at least 1 preset.
 - [shaders](shaders) folder with all of it's contents.
 - [glfw3.dll](glfw3.dll) file.
-
-**Technical requirements:**
-- A somewhat recent GPU that can support OpenGL 4.5 core version or later.
-- Depending on simulation size, enough ram so that the particles can be loaded.
 
 All of these files should be in the same directory as the executable. To run simply run the ```main.exe``` or differently named executable and follow the instructions in console.
 
 **Presets and their use:**
 
-Preset files are simple ```json``` files, which can be found in [presets](presets) folder. They store variable settings, that are used for simulation execution. When you successfully run the executable it will ask for which preset you want to use. I recommend using the defaults for the first few runs, then, I encourage you to try changing some values and seeing what changes.
+Preset files are simple ```.json``` files, which can be found in [presets](presets) folder. They store variable settings, that are used for simulation execution. When you successfully run the executable it will ask for which preset you want to use. I recommend using the defaults for the first few runs, then, I encourage you to try changing some values and seeing what changes.
 
 **Settings:**
+
 - agentNumber **[num]** - as the name suggests it's how many individual "agents" or particles are in a simulation, keep in mind that each agent takes up 12 bytes of memory.
 - moveSpeed **[num]** - each agent movement speed which is used in their movement calculations.
 - turnSpeed **[radians]** - how quickly agents turn towards trails.
