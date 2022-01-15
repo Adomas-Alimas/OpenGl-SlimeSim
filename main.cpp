@@ -91,20 +91,20 @@ int main()
 	
 	// build and compile shader programs
 	// --------------------------------
-	vertFragShader generalShader("shaders/Vertex.glsl", "shaders/Fragment.glsl");
+	vertFragShader generalShader("shaders/Vertex.vert", "shaders/Fragment.frag");
 
 	// default to final compute shader
-	computeShader simShader("shaders/slimeFinal.glsl");
+	computeShader simShader("shaders/slimeFinal.comp");
 
 	// choose simulation level based on settings preset
 	if(settingsData["simulationShader"] == "stageFinal")
 	{
-		simShader = computeShader("shaders/slimeFinal.glsl");
+		simShader = computeShader("shaders/slimeFinal.comp");
 	}
 	else
 	{
 		std::string option = settingsData["simulationShader"];
-		std::string shaderpath = "shaders/" + option + ".glsl";
+		std::string shaderpath = "shaders/" + option + ".comp";
 		simShader = computeShader(shaderpath.c_str());
 	}
 	
@@ -178,7 +178,6 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	float alphaVal[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -247,33 +246,32 @@ int main()
 	agentsArrPtr = (agent*) malloc(AGENT_NUM * sizeof(agent));
 
 	// setup random device for angle, position, etc.. customization
+	// these devices are part of c++ random value generation
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	
 
-	// initialize each agent with starting pos, angle
+	// initialize each agent with starting position and angle
+	// they are determined by user defined settings in the selected preset
 	for (int i = 0; i < AGENT_NUM; i++)
 	{
-		// temp agent that gets added to agentsArrPtr
 		agent t;
 
-		// centre position x and y
 		int centreX = SCREEN_WIDTH / 2;
 		int centreY = SCREEN_HEIGHT / 2;
 
-
+		// spawns all agents in the middle, with random angles
 		if (settingsData["spawnMethod"] == "centre")
 		{
-			// spawns all agents in the middle, with random angles
 			std::uniform_real_distribution<> randomAngle(0, 12.5662);
 			t.x = centreX;
 			t.y = centreY;
 			t.angle = randomAngle(gen);
 		}
+		// spawns all agents in the area of a circle with angles
+		// facing towards screen centre
 		else if (settingsData["spawnMethod"] == "circle")
 		{
-			// spawns all agents in the area of a circle with angles
-			// facing towards screen centre
 			int radius = SCREEN_HEIGHT / 3;
 			std::uniform_real_distribution<> randomAngle(0, 6.2831);
 			std::uniform_int_distribution<> randomRadius(0, radius);
@@ -286,10 +284,9 @@ int main()
 
 			t.angle = genAngle + M_PI;
 		}
+		// spawns all agents with random angles and random position
 		else if (settingsData["spawnMethod"] == "random")
 		{
-			// spawns all agents with random angles and random position
-
 			std::uniform_real_distribution<> randomAngle(0, 6.2831);
 			std::uniform_int_distribution<> randomX(0, SCREEN_WIDTH);
 			std::uniform_int_distribution<> randomY(0, SCREEN_HEIGHT);
@@ -324,6 +321,15 @@ int main()
 	// wireframe mode
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+
+
+	//TODO: performance testing delete after done
+	unsigned int timerQuery;
+	glGenQueries(1, &timerQuery);
+
+	int timeElapsed;
+
+
 	
 	int flag = 0;
 	// main loop
@@ -334,7 +340,6 @@ int main()
 		if (flag == 0)
 		{
 			flag = 1;
-
 		}
 		else if (flag == 1)
 		{
@@ -351,6 +356,7 @@ int main()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		glBeginQuery(GL_TIME_ELAPSED, timerQuery);
 
 		// run general vertex and fragment shaders
 		// ---------------------------------------
@@ -367,8 +373,16 @@ int main()
 		// draw the mainTexture on a whole screen rectangle 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+		glEndQuery(GL_TIME_ELAPSED);
+		glGetQueryObjectiv(timerQuery, GL_QUERY_RESULT, &timeElapsed);
+		
+		std::cout<<1/(timeElapsed/1000000000.0)<<" || ";
+
+
+
 		// calculate new simulation step in compute shader
 		// ---------------------------------
+		glBeginQuery(GL_TIME_ELAPSED, timerQuery);
 		simShader.use();
 
 		float timeValue = glfwGetTime();
@@ -383,6 +397,7 @@ int main()
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, settingsSSBO);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, agentDataSSBO);
 
+		//TODO: figure out how to calculate most optimal computeDivisor depending on AGENT_NUM
 		// change this value to make compute shader more efficient (1, 8, 16, 32)
 		const int computeDivisor = 32;
 
@@ -390,6 +405,12 @@ int main()
 
 		// stops execution until all compute shaders have finished work
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+		glEndQuery(GL_TIME_ELAPSED);
+
+		glGetQueryObjectiv(timerQuery, GL_QUERY_RESULT, &timeElapsed);
+
+		std::cout<<1/(timeElapsed/1000000000.0)<<"\n";
 
 		// glfw - swap buffers and poll events
 		// -----------------------------------

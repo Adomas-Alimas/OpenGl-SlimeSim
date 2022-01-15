@@ -52,7 +52,7 @@ uint hash(uint state)
 float uintToRange01(uint state)
 {
 	// make a usigned int correspond to a value between 0 and 1
-	float res = state / 4294967295f;
+	float res = state / 4294967295.f;
 	return res;
 }
 
