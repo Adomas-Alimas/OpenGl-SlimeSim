@@ -29,17 +29,24 @@ If you don't want to compile this project yourself pre-compiled binaries can be 
 - [glfw3.dll](glfw3.dll), [json.hpp](json.hpp), [main.cpp](main.cpp) and [shader.h](shader.h) file in compile directory.
 - Preferred compiler.
 
-I have tested out compiling this project using g++ in a Windows 10 environment, if you are on a similar environment you can use a simple one-liner:
+I have tested out compiling this project using g++ in a Windows 10 environment, if you are on a similar environment you can use a simple one-liner from the `main.cpp` file directory:
 
-```
+```shell
 g++ main.cpp lib/glad/src/glad.c lib/glfw-WIN32/lib-mingw-w64/libglfw3dll.a -Ilib/glfw-WIN32/include -Ilib/glad/include -o main.exe
 ```
 
-If you are not using g++ you will have to compile the code according to your compilers specs, most importantly you have to link against ```lib/glad/src/glad.c``` and ```lib/glfw-WIN32/lib-mingw-w64/libglfw3dll.a```, and get their respective include paths right, which are ```lib/glfw-WIN32/include``` and ```lib/glad/include```.
+If you are not using g++ you will have to compile the code according to your compilers specs. When compiling you have to link against `lib/glad/src/glad.c` and `lib/glfw-WIN32/lib-mingw-w64/libglfw3dll.a`, and get their respective include paths right, which are `lib/glfw-WIN32/include` and `lib/glad/include`.
 
 ## Running this project
 
 If you have successfully compiled this project or have downloaded the .exe file you can try running it.
+Use the following command for it:
+
+```shell
+./main.exe [presetName]
+```
+
+`presetName` being the preset file title without the `.json` file extension.
 
 **Technical requirements:**
 
@@ -53,11 +60,11 @@ If you have successfully compiled this project or have downloaded the .exe file 
 - [shaders](shaders) folder with all of it's contents.
 - [glfw3.dll](glfw3.dll) file.
 
-All of these files should be in the same directory as the executable. To run simply run the ```main.exe``` or differently named executable and follow the instructions in console.
+All of these files should be in the same directory as the executable.
 
-**Presets and their use:**
+## Presets and their use
 
-Preset files are simple ```.json``` files, which can be found in [presets](presets) folder. They store variable settings, that are used for simulation execution. When you successfully run the executable it will ask for which preset you want to use. I recommend using the defaults for the first few runs, then, I encourage you to try changing some values and seeing what changes.
+Preset files are simple `.json` files, which can be found in the [presets](presets) folder. They store variable settings, that are used for simulation execution. When running the program the only required argument is preset file name. I recommend using the defaults for the first few runs, then, I encourage you to try changing some values and seeing what changes.
 
 **Settings:**
 
@@ -70,5 +77,5 @@ Preset files are simple ```.json``` files, which can be found in [presets](prese
 - mapHeight **[num]** - screen space height in pixels.
 - decayRate **[num]** - how quickly the trails decay, should be between 0 and 1.
 - diffuseRate **[num]** - how quickly the trails diffuse with environment, should be between 0 and 1.
-- spawnMethod **[string]** - how the agents are spawned at the start of simulation. Choices are: ```centre```, ```circle```, ```random```.
-- simulationShader - should always be ```stageFinal```
+- spawnMethod **[string]** - how the agents are spawned at the start of simulation. Choices are: `centre`, `circle`, `random`.
+- simulationShader - should always be `stageFinal`
