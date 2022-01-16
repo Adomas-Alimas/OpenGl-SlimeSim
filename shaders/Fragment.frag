@@ -37,8 +37,8 @@ void main()
 	
 
 	// simple box blur
-	vec4 blurSum;
-	int totalWeight;
+	vec4 blurSum = vec4(0);
+	int totalWeight = 0;
 	for(int offsetX = -1; offsetX <= 1; offsetX++)
 	{
 		for(int offsetY = -1; offsetY <= 1; offsetY++)
@@ -82,6 +82,6 @@ void main()
 	// fixes left bottom corner white pixel bug?
 	//imageStore(trailMap, ivec2(0, 0), vec4(0, 0, 0, 0));
 
-	// clear the agent map, it will be filled by compute shader next 
+	// clear the agent map, it will be filled by compute shader next iteration
 	imageStore(agentMap, ivec2(gl_FragCoord.xy), vec4(0, 0, 0, 0));
 }

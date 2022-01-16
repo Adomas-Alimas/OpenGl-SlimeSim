@@ -346,10 +346,11 @@ int main(int argc, char** argv)
 		if (flag == 0)
 		{
 			flag = 1;
+			
 		}
 		else if (flag == 1)
 		{
-			//system("pause");
+			system("pause");
 			flag = 2;
 		}
 
@@ -362,7 +363,6 @@ int main(int argc, char** argv)
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glBeginQuery(GL_TIME_ELAPSED, timerQuery);
 
 		// run general vertex and fragment shaders
 		// ---------------------------------------
@@ -379,16 +379,11 @@ int main(int argc, char** argv)
 		// draw the mainTexture on a whole screen rectangle 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		glEndQuery(GL_TIME_ELAPSED);
-		glGetQueryObjectiv(timerQuery, GL_QUERY_RESULT, &timeElapsed);
-		
-		std::cout<<1/(timeElapsed/1000000000.0)<<" || ";
 
 
 
 		// calculate new simulation step in compute shader
 		// ---------------------------------
-		glBeginQuery(GL_TIME_ELAPSED, timerQuery);
 		simShader.use();
 
 		float timeValue = glfwGetTime();
@@ -405,18 +400,14 @@ int main(int argc, char** argv)
 
 		//TODO: figure out how to calculate most optimal computeDivisor depending on AGENT_NUM
 		// change this value to make compute shader more efficient (1, 8, 16, 32)
-		const int computeDivisor = 32;
+		const int computeDivisor = 64;
 
 		simShader.dispatch(AGENT_NUM/computeDivisor, 1);
 
 		// stops execution until all compute shaders have finished work
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
-		glEndQuery(GL_TIME_ELAPSED);
 
-		glGetQueryObjectiv(timerQuery, GL_QUERY_RESULT, &timeElapsed);
-
-		std::cout<<1/(timeElapsed/1000000000.0)<<"\n";
 
 		// glfw - swap buffers and poll events
 		// -----------------------------------

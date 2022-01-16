@@ -1,7 +1,7 @@
 #version 450 core
 #define PI 3.1415926535
 // local workgroup size
-layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
 layout (location = 0) uniform float time;
 
@@ -63,7 +63,7 @@ float senseTrail(agent cAgent, float sensorAngleOffset, float sensorDistance)
 	int sensorCenterX = int(cAgent.x + cos(sensorAngle) * sensorDistance);
 	int sensorCenterY = int(cAgent.y + sin(sensorAngle) * sensorDistance);
 
-	float senseSum;
+	float senseSum=0;
 	for (int offsetX = -1; offsetX <= 1; offsetX++)
 	{
 		for (int offsetY = -1; offsetY <= 1; offsetY++)
@@ -71,7 +71,7 @@ float senseTrail(agent cAgent, float sensorAngleOffset, float sensorDistance)
 			int sampleX = min(settings.width-1, max(0, sensorCenterX+offsetX));
 			int sampleY = min(settings.height-1, max(0, sensorCenterY+offsetY));
 
-			senseSum += dot(imageLoad(trailMap, ivec2(sampleX, sampleY)), vec4(1,1,1,1));
+			senseSum += dot(imageLoad(trailMap, ivec2(sampleX, sampleY)).rgba, vec4(1,1,1,1));
 			//senseSum += imageLoad(trailMap, ivec2(sampleX, sampleY)).b;
 		}
 	}
@@ -106,7 +106,7 @@ void main()
 	agent currentAgent = agentArray[id.x];
 	
 	// get a random number from a set of inputs
-	uint random = hash(int(currentAgent.y * width + currentAgent.x) + hash(int(id.x + time * 824941)));
+	uint random = hash(int(currentAgent.y * width + currentAgent.x) + hash(int(id.x * 824941)));
 
 	float senseForward = senseTrail(currentAgent, 0, sensorDistance);
 	float senseLeft = senseTrail(currentAgent, agentSensorAngleOffset, sensorDistance);
@@ -115,7 +115,11 @@ void main()
 	float randomSteerStrength = uintToRange01(hash(random));
 
 	// choose direction based on trails
-	if(senseForward > senseLeft && senseForward > senseRight)
+	if (senseForward == 0 && senseRight == 0 && senseLeft == 0)
+	{
+		currentAgent.angle += (randomSteerStrength-0.5) * 2 * turnSpeed;
+	}
+	else if(senseForward > senseLeft && senseForward > senseRight)
 	{
 		currentAgent.angle += 0;
 	}
@@ -131,6 +135,11 @@ void main()
 	{
 		currentAgent.angle -= (randomSteerStrength * turnSpeed);
 	}
+	else
+	{
+		currentAgent.angle += (randomSteerStrength-0.5) * 2 * turnSpeed;
+	}
+	
 	
 	// calculate next position
 	currentAgent.x += moveSpeed * cos(currentAgent.angle);
