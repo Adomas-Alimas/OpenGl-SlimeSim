@@ -106,7 +106,7 @@ void main()
 	agent currentAgent = agentArray[id.x];
 	
 	// get a random number from a set of inputs
-	uint random = hash(int(currentAgent.y * width + currentAgent.x) + hash(int(id.x + time * 100000)));
+	uint random = hash(int(currentAgent.y * width + currentAgent.x) + hash(int(id.x + time * 824941)));
 
 	float senseForward = senseTrail(currentAgent, 0, sensorDistance);
 	float senseLeft = senseTrail(currentAgent, agentSensorAngleOffset, sensorDistance);

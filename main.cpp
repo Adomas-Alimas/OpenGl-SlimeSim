@@ -22,36 +22,42 @@ void processInput(GLFWwindow *window);
 
 
 
-int main()
+int main(int argc, char** argv)
 {
 	// get and read preset file into json object
 	// --------------------------------------
-	std::string settingsOption;
-	std::cout << "Choose settings preset (found in presets folder): " << std::endl;
-	std::cin >> settingsOption;
-	
-	std::string command = "presets/" + settingsOption + ".json";
-
-	std::ifstream input(command);
-
-	if (!input)
+	if (argc < 2)
 	{
-		std::cout << "This preset file doesn't exist.";
+		std::cout << "Missing command line argument: preset name.\n";
+		std::cout << "Launch 'main.exe' like the following example:\n\n";
+		std::cout << "./main.exe presetName";
+		return -1;
+	}
+	else if (argc > 2)
+	{
+		std::cout << "Only 1 command line argument is allowed.";
+		return -1;
+	}
+
+	std::string filePath = "presets/" + std::string(argv[1]) + ".json";
+
+	std::ifstream presetFile(filePath);
+
+	if(!presetFile)
+	{
+		std::cout << "Preset file with relative path: ";
+		std::cout << filePath;
+		std::cout << " doesn't exist.";
 		return -1;
 	}
 
 	json settingsData;
-
-	
-
-	input >> settingsData;
+	presetFile >> settingsData;
 
 	// glfw setup
 
 	unsigned int SCREEN_WIDTH = settingsData["mapWidth"];
 	unsigned int SCREEN_HEIGHT = settingsData["mapHeight"];
-
-
 
 
 
@@ -343,7 +349,7 @@ int main()
 		}
 		else if (flag == 1)
 		{
-			system("pause");
+			//system("pause");
 			flag = 2;
 		}
 
