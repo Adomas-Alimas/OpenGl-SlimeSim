@@ -12,11 +12,10 @@ Also Sage Jenson's variation of this project and it's helpful write up, which ca
 
 ## Project file breakdown
 
-- [lib](lib) - contains all of the dependencies for glfw and glad.
+- [lib](lib) - contains all of the dependencies for compiling `main.cpp`.
 - [presets](presets) - contains different value presets for different program output.
 - [shaders](shaders) - contains GLSL code shaders that are used at run-time.
 - [glfw3.dll](glfw3.dll) - dynamically linked lib that is required at run-time.
-- [json.hpp](json.hpp), [shader.h](shader.h) - other dependencies.
 - [main.cpp](main.cpp) - main code file.
 
 ## Compiling this project
@@ -26,7 +25,7 @@ If you don't want to compile this project yourself pre-compiled binaries can be 
 **Requirements:**
 
 - [lib](lib) folder with all of it's contents in compile directory.
-- [glfw3.dll](glfw3.dll), [json.hpp](json.hpp), [main.cpp](main.cpp) and [shader.h](shader.h) file in compile directory.
+- [glfw3.dll](glfw3.dll), and [main.cpp](main.cpp) files in compile directory.
 - Preferred compiler.
 
 I have tested out compiling this project using g++ in a Windows 10 environment, if you are on a similar environment you can use a simple one-liner from the `main.cpp` file directory:

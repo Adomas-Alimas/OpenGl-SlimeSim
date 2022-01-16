@@ -10,11 +10,11 @@
 #include <random>
 #include <string>
 
-#include "json.hpp"
+#include "lib/json.hpp"
 using json = nlohmann::json;
 
 
-#include "shader.h"
+#include "lib/shader.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
