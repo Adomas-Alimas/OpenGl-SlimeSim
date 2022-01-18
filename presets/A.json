@@ -9,6 +9,9 @@
     "mapWidth": 1080,
     "mapHeight": 1080,
 
+    "color_r": 255,
+    "color_g": 255,
+    "color_b": 255,
     "decayRate": 0.005,
     "diffuseRate": 0.3,
 
