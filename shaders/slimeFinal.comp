@@ -3,21 +3,30 @@
 // local workgroup size
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
-layout (location = 0) uniform float time;
 
+// image textures used
 layout (binding = 1, rgba32f) uniform image2D trailMap;
 layout (binding = 2, rgba32f) uniform image2D agentMap;
 
 // setting SSBO
 struct settingsStruct {
+	// agent settings
+	// --------------
 	float moveSpeed;
 	float turnSpeed;
 	float sensorAngle;
 	float sensorDistance;
 
+	// map size settings
+	// ------------
 	int width;
 	int height;
 
+	// diffusion and decay settings
+	// ----------------------------
+	float color_r;
+	float color_g;
+	float color_b;
 	float decayRate;
 	float diffuseRate;
 };
@@ -117,14 +126,17 @@ void main()
 	// choose direction based on trails
 	if (senseForward == 0 && senseRight == 0 && senseLeft == 0)
 	{
+		// fully random movement if no trails detected
 		currentAgent.angle += (randomSteerStrength-0.5) * 2 * turnSpeed;
 	}
 	else if(senseForward > senseLeft && senseForward > senseRight)
 	{
+		// strongest trail is in front
 		currentAgent.angle += 0;
 	}
 	else if (senseForward < senseLeft && senseForward < senseRight)
 	{
+		// both left and right trail overpower forward trail
 		currentAgent.angle += (randomSteerStrength-0.5) * 2 * turnSpeed;
 	}
 	else if (senseLeft > senseRight)
@@ -156,22 +168,22 @@ void main()
 		currentAgent.angle = randomAngle;
 	}
 
-	// store calculated agent int oagent array
+	// store calculated agent into agent array
 	agentArray[id.x] = currentAgent;
 	
 	// agent color theme
-	vec4 CONST_COLOR = vec4(1, 1, 1, 1);//(0.662, 0.282, 0.878, 1)
+	vec4 agentColor = vec4(settings.color_r, settings.color_g, settings.color_b, 1);//vec4(1, 1, 1, 1);//(0.662, 0.282, 0.878, 1)
 
-	// store aent color in agentMap
-	imageStore(agentMap, ivec2(currentAgent.x, currentAgent.y), CONST_COLOR);
+	// store agent color in agentMap
+	imageStore(agentMap, ivec2(currentAgent.x, currentAgent.y), agentColor);
 	
 	// calculate and deposit trail into trailmap
-	vec4 deposit = vec4(CONST_COLOR/5);
+	vec4 deposit = vec4(agentColor/5);
 	deposit.a = 1;
 
 	vec4 previousTrail = imageLoad(trailMap, ivec2(currentAgent.x, currentAgent.y));
 
-	vec4 newTrail = vec4(min(previousTrail + deposit, CONST_COLOR));
+	vec4 newTrail = vec4(min(previousTrail + deposit, agentColor));
 
 	imageStore(trailMap, ivec2(currentAgent.x, currentAgent.y), newTrail);
 }

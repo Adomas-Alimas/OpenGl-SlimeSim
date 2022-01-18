@@ -51,13 +51,13 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	json settingsData;
-	presetFile >> settingsData;
+	json settingsJson;
+	presetFile >> settingsJson;
 
 	// glfw setup
 
-	unsigned int SCREEN_WIDTH = settingsData["mapWidth"];
-	unsigned int SCREEN_HEIGHT = settingsData["mapHeight"];
+	unsigned int SCREEN_WIDTH = settingsJson["mapWidth"];
+	unsigned int SCREEN_HEIGHT = settingsJson["mapHeight"];
 
 
 
@@ -103,13 +103,13 @@ int main(int argc, char** argv)
 	computeShader simShader("shaders/slimeFinal.comp");
 
 	// choose simulation level based on settings preset
-	if(settingsData["simulationShader"] == "stageFinal")
+	if(settingsJson["simulationShader"] == "stageFinal")
 	{
 		simShader = computeShader("shaders/slimeFinal.comp");
 	}
 	else
 	{
-		std::string option = settingsData["simulationShader"];
+		std::string option = settingsJson["simulationShader"];
 		std::string shaderpath = "shaders/" + option + ".comp";
 		simShader = computeShader(shaderpath.c_str());
 	}
@@ -208,34 +208,43 @@ int main(int argc, char** argv)
 
 		// diffusion and decay settings
 		// ----------------------------
+		float color_r;
+		float color_g;
+		float color_b;
 		float decayRate;
 		float diffuseRate;
 
-	} generalSettings;
+	} simulationSettings;
 
 	// can't assign values to variables above from the json
 	// file so i have to do the assigning bellow
-	generalSettings.moveSpeed = settingsData["moveSpeed"];
-	generalSettings.turnSpeed = settingsData["turnSpeed"];
-	generalSettings.sensorAngle = settingsData["sensorAngle"];
-	generalSettings.sensorDistance = settingsData["sensorDistance"];
+	simulationSettings.moveSpeed = settingsJson["moveSpeed"];
+	simulationSettings.turnSpeed = settingsJson["turnSpeed"];
+	simulationSettings.sensorAngle = settingsJson["sensorAngle"];
+	simulationSettings.sensorDistance = settingsJson["sensorDistance"];
 
-	generalSettings.width = settingsData["mapWidth"];
-	generalSettings.height = settingsData["mapHeight"];
+	simulationSettings.width = settingsJson["mapWidth"];
+	simulationSettings.height = settingsJson["mapHeight"];
 
-	generalSettings.decayRate = settingsData["decayRate"];
-	generalSettings.diffuseRate = settingsData["diffuseRate"];
+	simulationSettings.color_r = settingsJson["color_r"];
+	simulationSettings.color_r /= 255.0f;
+	simulationSettings.color_g = settingsJson["color_g"];
+	simulationSettings.color_g /= 255.0f;
+	simulationSettings.color_b = settingsJson["color_b"];
+	simulationSettings.color_b /= 255.0f;
+	simulationSettings.decayRate = settingsJson["decayRate"];
+	simulationSettings.diffuseRate = settingsJson["diffuseRate"];
 
 	// create settings SSBO and put settings struct into it
 	unsigned int settingsSSBO;
 	glGenBuffers(1, &settingsSSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, settingsSSBO);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(generalSettings), &generalSettings, GL_STATIC_DRAW);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(simulationSettings), &simulationSettings, GL_STATIC_DRAW);
 
 	
 	// create agent struct and fill an array with agents
 	// -------------------------------------------------
-	unsigned int AGENT_NUM = settingsData["agentNumber"];
+	unsigned int AGENT_NUM = settingsJson["agentNumber"];
 
 	struct agent {
 		float x;
@@ -267,7 +276,7 @@ int main(int argc, char** argv)
 		int centreY = SCREEN_HEIGHT / 2;
 
 		// spawns all agents in the middle, with random angles
-		if (settingsData["spawnMethod"] == "centre")
+		if (settingsJson["spawnMethod"] == "centre")
 		{
 			std::uniform_real_distribution<> randomAngle(0, 12.5662);
 			t.x = centreX;
@@ -276,7 +285,7 @@ int main(int argc, char** argv)
 		}
 		// spawns all agents in the area of a circle with angles
 		// facing towards screen centre
-		else if (settingsData["spawnMethod"] == "circle")
+		else if (settingsJson["spawnMethod"] == "circle")
 		{
 			int radius = SCREEN_HEIGHT / 3;
 			std::uniform_real_distribution<> randomAngle(0, 6.2831);
@@ -291,7 +300,7 @@ int main(int argc, char** argv)
 			t.angle = genAngle + M_PI;
 		}
 		// spawns all agents with random angles and random position
-		else if (settingsData["spawnMethod"] == "random")
+		else if (settingsJson["spawnMethod"] == "random")
 		{
 			std::uniform_real_distribution<> randomAngle(0, 6.2831);
 			std::uniform_int_distribution<> randomX(0, SCREEN_WIDTH);
