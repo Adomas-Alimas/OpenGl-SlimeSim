@@ -9,6 +9,7 @@
 #include <vector>
 #include <random>
 #include <string>
+#include <algorithm>
 
 #include "lib/json.hpp"
 using json = nlohmann::json;
@@ -17,8 +18,10 @@ using json = nlohmann::json;
 #include "lib/shader.h"
 
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
+void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+void processInput(GLFWwindow *window, bool &fullscreen, int width, int height);
+bool waitForStartInput(GLFWwindow *window);
+GLFWmonitor* getCurrentMonitor(GLFWwindow *window);
 
 
 
@@ -78,6 +81,7 @@ int main(int argc, char** argv)
 	//glfwWindowHint(GLFW_DECORATED, false);
 
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Slime sim", NULL, NULL);
+	bool fullscreen = false;
 	//GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Slime sim", glfwGetPrimaryMonitor(), NULL);
 	if (window == NULL)
 	{
@@ -86,7 +90,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); 
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback); 
 	
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -346,26 +350,17 @@ int main(int argc, char** argv)
 
 
 	
-	int flag = 0;
+	
 	// main loop
+	bool simulationStarted = false;
+	std::cout<<"Press SPACE for the simulation to start.";
 
 	while(!glfwWindowShouldClose(window))
 	{
-		// TODO: remove for debbuging
-		if (flag == 0)
-		{
-			flag = 1;
-			
-		}
-		else if (flag == 1)
-		{
-			system("pause");
-			flag = 2;
-		}
-
 		// input
 		// -----
-		processInput(window);
+		processInput(window, fullscreen, SCREEN_WIDTH, SCREEN_HEIGHT);
+
 
 		// clear screen
 		// ------------
@@ -388,7 +383,18 @@ int main(int argc, char** argv)
 		// draw the mainTexture on a whole screen rectangle 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+		
 
+		// guard clause shat skips compute shader part if SPACE has not been pressed
+		if (!simulationStarted)
+		{
+			simulationStarted = waitForStartInput(window);
+
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+
+			continue;
+		}
 
 
 		// calculate new simulation step in compute shader
@@ -415,6 +421,7 @@ int main(int argc, char** argv)
 
 		// stops execution until all compute shaders have finished work
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+		
 
 
 
@@ -429,13 +436,75 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }  
 
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, bool &fullscreen, int width, int height)
 {
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+		
+
+	if(glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+	{
+		if(!fullscreen)
+		{
+			fullscreen = true;
+			glfwSetWindowMonitor(window, getCurrentMonitor(window), 0, 0, width, height, GLFW_DONT_CARE);
+
+		} else
+		{
+			fullscreen = false;
+			glfwSetWindowMonitor(window, NULL, 500, 500, width, height, GLFW_DONT_CARE);
+		}
+
+
+	}
+}
+
+bool waitForStartInput(GLFWwindow *window)
+{
+	if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		return true;
+
+	return false;
+}
+
+GLFWmonitor* getCurrentMonitor(GLFWwindow *window)
+{
+	int nMonitors;
+	int wx, wy, ww, wh;
+	int mx, my, mw, mh;
+	int overlap, bestOverlap;
+	GLFWmonitor *bestMonitor;
+	GLFWmonitor **monitors;
+	const GLFWvidmode *mode;
+
+	bestOverlap = 0;
+	bestMonitor = NULL;
+
+	glfwGetWindowPos(window, &wx, &wy);
+	glfwGetWindowSize(window, &ww, &wh);
+	monitors = glfwGetMonitors(&nMonitors);
+
+	for (int i = 0; i < nMonitors; i++)
+	{
+		mode = glfwGetVideoMode(monitors[i]);
+		glfwGetMonitorPos(monitors[i], &mx, &my);
+		mw = mode->width;
+		mh = mode->height;
+
+		overlap = 	std::max(0, std::min(wx+ww, mx+mw) - std::max(wx,mx)) * 
+					std::max(0, std::min(wy+wh, my+mh) - std::max(wy,my));
+
+		if (bestOverlap < overlap)
+		{
+			bestOverlap = overlap;
+			bestMonitor = monitors[i];
+		}
+	}
+
+	return bestMonitor;
 }
