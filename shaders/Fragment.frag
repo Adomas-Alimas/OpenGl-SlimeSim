@@ -56,6 +56,7 @@ void main()
 		for(int offsetY = -1; offsetY <= 1; offsetY++)
 		{
 			
+			// bound checking for sample coords
 			int sampleX = min(width-1, max(0, int(gl_FragCoord.x)+offsetX));
 			int sampleY = min(height-1, max(0, int(gl_FragCoord.y)+offsetY));
 
@@ -92,6 +93,7 @@ void main()
 	if (agentColor.a > 0.1)
 	{
 		FragColor = agentColor;
+		//FragColor = vec4(0.662, 0.282, 0.878, 1);
 	}
 	else
 	{	

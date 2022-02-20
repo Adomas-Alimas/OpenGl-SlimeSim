@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 	//glfwWindowHint(GLFW_DECORATED, false);
 
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Slime sim", NULL, NULL);
-	bool fullscreen = false;
+	
 	//GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Slime sim", glfwGetPrimaryMonitor(), NULL);
 	if (window == NULL)
 	{
@@ -301,6 +301,7 @@ int main(int argc, char** argv)
 			t.x = centreX + (cos(genAngle) * distance);
 			t.y = centreY + (sin(genAngle) * distance);
 
+			// get angle that is towards the circle centre
 			t.angle = genAngle + M_PI;
 		}
 		// spawns all agents with random angles and random position
@@ -353,6 +354,8 @@ int main(int argc, char** argv)
 	
 	// main loop
 	bool simulationStarted = false;
+	bool fullscreen = false;
+	
 	std::cout<<"Press SPACE for the simulation to start.";
 
 	while(!glfwWindowShouldClose(window))
@@ -386,6 +389,7 @@ int main(int argc, char** argv)
 		
 
 		// guard clause shat skips compute shader part if SPACE has not been pressed
+		// -------------------------------------------------------------------------
 		if (!simulationStarted)
 		{
 			simulationStarted = waitForStartInput(window);
@@ -445,7 +449,7 @@ void processInput(GLFWwindow *window, bool &fullscreen, int width, int height)
 {
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-		
+
 
 	if(glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
 	{
@@ -459,8 +463,6 @@ void processInput(GLFWwindow *window, bool &fullscreen, int width, int height)
 			fullscreen = false;
 			glfwSetWindowMonitor(window, NULL, 500, 500, width, height, GLFW_DONT_CARE);
 		}
-
-
 	}
 }
 
