@@ -19,9 +19,18 @@ using json = nlohmann::json;
 
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window, bool &fullscreen, int width, int height);
+void processInput(GLFWwindow *window, bool &fullscreen, bool &paused, int width, int height);
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 bool waitForStartInput(GLFWwindow *window);
 GLFWmonitor* getCurrentMonitor(GLFWwindow *window);
+
+
+struct globalSettings {
+	bool paused = true;
+	bool fullscreen = false;
+	unsigned int width;
+	unsigned int height;
+} PROGRAM_SETTINGS;
 
 
 
@@ -62,6 +71,9 @@ int main(int argc, char** argv)
 	unsigned int SCREEN_WIDTH = settingsJson["mapWidth"];
 	unsigned int SCREEN_HEIGHT = settingsJson["mapHeight"];
 
+	PROGRAM_SETTINGS.width = settingsJson["mapWidth"];
+	PROGRAM_SETTINGS.height = settingsJson["mapHeight"];
+
 
 
 	if (!glfwInit())
@@ -80,9 +92,8 @@ int main(int argc, char** argv)
 	// remove after done
 	//glfwWindowHint(GLFW_DECORATED, false);
 
-	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Slime sim", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(PROGRAM_SETTINGS.width, PROGRAM_SETTINGS.height, "Slime sim", NULL, NULL);
 	
-	//GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Slime sim", glfwGetPrimaryMonitor(), NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -90,7 +101,11 @@ int main(int argc, char** argv)
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
-	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback); 
+	
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+	
+	// callback for all inputs check keyCallback() for input processing
+	glfwSetKeyCallback(window, keyCallback);
 	
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -179,7 +194,7 @@ int main(int argc, char** argv)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, PROGRAM_SETTINGS.width, PROGRAM_SETTINGS.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	// agent texture setup
 	glBindTexture(GL_TEXTURE_2D, agentTexture);
@@ -188,7 +203,7 @@ int main(int argc, char** argv)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, PROGRAM_SETTINGS.width, PROGRAM_SETTINGS.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	float alphaVal[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 	glClearTexImage(agentTexture, 0, GL_RGBA, GL_FLOAT, alphaVal);
@@ -276,8 +291,8 @@ int main(int argc, char** argv)
 	{
 		agent t;
 
-		int centreX = SCREEN_WIDTH / 2;
-		int centreY = SCREEN_HEIGHT / 2;
+		int centreX = PROGRAM_SETTINGS.width / 2;
+		int centreY = PROGRAM_SETTINGS.height / 2;
 
 		// spawns all agents in the middle, with random angles
 		if (settingsJson["spawnMethod"] == "centre")
@@ -291,7 +306,7 @@ int main(int argc, char** argv)
 		// facing towards screen centre
 		else if (settingsJson["spawnMethod"] == "circle")
 		{
-			int radius = SCREEN_HEIGHT / 3;
+			int radius = PROGRAM_SETTINGS.height / 3;
 			std::uniform_real_distribution<> randomAngle(0, 6.2831);
 			std::uniform_int_distribution<> randomRadius(0, radius);
 
@@ -308,8 +323,8 @@ int main(int argc, char** argv)
 		else if (settingsJson["spawnMethod"] == "random")
 		{
 			std::uniform_real_distribution<> randomAngle(0, 6.2831);
-			std::uniform_int_distribution<> randomX(0, SCREEN_WIDTH);
-			std::uniform_int_distribution<> randomY(0, SCREEN_HEIGHT);
+			std::uniform_int_distribution<> randomX(0, PROGRAM_SETTINGS.width);
+			std::uniform_int_distribution<> randomY(0, PROGRAM_SETTINGS.height);
 
 			t.x = randomX(gen);
 			t.y = randomY(gen);
@@ -349,20 +364,23 @@ int main(int argc, char** argv)
 
 	int timeElapsed;
 
+	
 
-	
-	
-	// main loop
-	bool simulationStarted = false;
-	bool fullscreen = false;
-	
 	std::cout<<"Press SPACE for the simulation to start.";
-
 	while(!glfwWindowShouldClose(window))
 	{
-		// input
-		// -----
-		processInput(window, fullscreen, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+		// guard clause shat skips compute shader part if the sim is paused
+		// ----------------------------------------------------------------
+		if (PROGRAM_SETTINGS.paused)
+		{
+			//simulationStarted = waitForStartInput(window);
+
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+
+			continue;
+		}
 
 
 		// clear screen
@@ -387,18 +405,6 @@ int main(int argc, char** argv)
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		
-
-		// guard clause shat skips compute shader part if SPACE has not been pressed
-		// -------------------------------------------------------------------------
-		if (!simulationStarted)
-		{
-			simulationStarted = waitForStartInput(window);
-
-			glfwSwapBuffers(window);
-			glfwPollEvents();
-
-			continue;
-		}
 
 
 		// calculate new simulation step in compute shader
@@ -445,37 +451,36 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height)
 	glViewport(0, 0, width, height);
 }  
 
-void processInput(GLFWwindow *window, bool &fullscreen, int width, int height)
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	// exiting
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-
-
-	if(glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+	
+	// fullscreen
+	if (key == GLFW_KEY_F && action == GLFW_PRESS)
 	{
-		if(!fullscreen)
+		if (!PROGRAM_SETTINGS.fullscreen)
 		{
-			fullscreen = true;
-			glfwSetWindowMonitor(window, getCurrentMonitor(window), 0, 0, width, height, GLFW_DONT_CARE);
+			PROGRAM_SETTINGS.fullscreen = true;
+			glfwSetWindowMonitor(window, getCurrentMonitor(window), 0, 0, PROGRAM_SETTINGS.width, PROGRAM_SETTINGS.height, GLFW_DONT_CARE);
 
 		} else
 		{
-			fullscreen = false;
-			glfwSetWindowMonitor(window, NULL, 500, 500, width, height, GLFW_DONT_CARE);
+			PROGRAM_SETTINGS.fullscreen = false;
+			glfwSetWindowMonitor(window, NULL, 500, 500, PROGRAM_SETTINGS.width, PROGRAM_SETTINGS.height, GLFW_DONT_CARE);
 		}
 	}
+	// pausing
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+		PROGRAM_SETTINGS.paused = !(PROGRAM_SETTINGS.paused);
 }
 
-bool waitForStartInput(GLFWwindow *window)
-{
-	if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		return true;
 
-	return false;
-}
 
 GLFWmonitor* getCurrentMonitor(GLFWwindow *window)
 {
+	// finds the current onitor in which the program window is running
 	int nMonitors;
 	int wx, wy, ww, wh;
 	int mx, my, mw, mh;
