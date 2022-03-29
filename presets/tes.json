@@ -1,18 +1,21 @@
 {
-    "agentNumber": 64,
+    "agentNumber": 128,
 
-    "moveSpeed": 1,
-    "turnSpeed": 0.5,
-    "sensorAngle": 0.5,
-    "sensorDistance": 2.5,
+    "moveSpeed": 0.1,
+    "turnSpeed": 0.1,
+    "sensorAngle": 0.2,
+    "sensorDistance": 5,
 
-    "mapWidth": 1920,
-    "mapHeight": 1080,
+    "mapWidth": 192,
+    "mapHeight": 108,
 
-    "decayRate": 0.2,
-    "diffuseRate": 3,
+    "color_r": 255,
+    "color_g": 255,
+    "color_b": 255,
+    "decayRate": 0.002,
+    "diffuseRate": 0.2,
 
-    "spawnMethod": "circle",
+    "spawnMethod": "random",
 
     "simulationShader": "stageFinal"
 }
