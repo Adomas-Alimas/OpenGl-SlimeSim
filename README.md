@@ -2,6 +2,9 @@
 
 A [physarum slime mold](https://en.wikipedia.org/wiki/Physarum_polycephalum) simulation written in C++, that makes use of modern (core 4.5+) OpenGL features.
 
+
+
+
 ## Inspirations
 
 Originally inspired by a video of [SebLague's](https://github.com/SebLague) project [Slime-Simulation](https://github.com/SebLague/Slime-Simulation), this is a very similar project that substitutes C# and DirectX for C++ and OpenGl.
@@ -76,3 +79,8 @@ Preset files are simple `.json` files which can be found in the [presets](preset
 - diffuseRate **[num]** - how quickly the trails diffuse with environment, should be between 0 and 1.
 - spawnMethod **[string]** - how the agents are spawned at the start of simulation. Choices are: `centre`, `circle`, `random`.
 - simulationShader - should always be `stageFinal`
+
+
+![image](https://github.com/Adomas-Alimas/OpenGl-SlimeSim/assets/39675293/f0bbd164-1a70-4af2-b1d4-c2d534679b9a)
+
+![image](https://github.com/Adomas-Alimas/OpenGl-SlimeSim/assets/39675293/9e332579-d995-43bc-8fe3-ff74115589ca)
