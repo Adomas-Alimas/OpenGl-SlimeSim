@@ -3,7 +3,7 @@
 A [physarum slime mold](https://en.wikipedia.org/wiki/Physarum_polycephalum) simulation written in C++, that makes use of modern (core 4.5+) OpenGL features.
 
 
-
+![image](https://github.com/Adomas-Alimas/OpenGl-SlimeSim/assets/39675293/f0bbd164-1a70-4af2-b1d4-c2d534679b9a)
 
 ## Inspirations
 
@@ -81,6 +81,6 @@ Preset files are simple `.json` files which can be found in the [presets](preset
 - simulationShader - should always be `stageFinal`
 
 
-![image](https://github.com/Adomas-Alimas/OpenGl-SlimeSim/assets/39675293/f0bbd164-1a70-4af2-b1d4-c2d534679b9a)
+
 
 ![image](https://github.com/Adomas-Alimas/OpenGl-SlimeSim/assets/39675293/9e332579-d995-43bc-8fe3-ff74115589ca)
